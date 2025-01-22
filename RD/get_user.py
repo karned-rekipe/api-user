@@ -6,7 +6,7 @@ with open("access_token.txt") as f:
 KEYCLOAK_HOST = 'iam.karned.bzh'
 KEYCLOAK_REALM  ='Karned'
 
-username = 'toto'
+username = 'killian'
 
 users_url = f"https://{KEYCLOAK_HOST}/admin/realms/{KEYCLOAK_REALM}/users"
 headers = {
