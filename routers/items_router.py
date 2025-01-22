@@ -16,14 +16,15 @@ router = APIRouter(
 @router.post("/", status_code=status.HTTP_201_CREATED)
 @check_permissions(['create'])
 async def create_new_item(request: Request, item: Item, repo=Depends(get_repo)) -> dict:
-    return {"return": 'TODO'}
+    item.created_by = request.state.token_info.get('user_id')
+    new_item_id = create_item(item, repo)
+    return {"uuid": new_item_id}
 
 
 @router.get("/", status_code=status.HTTP_200_OK, response_model=list[Item])
 @check_permissions(['read', 'read_own'])
 async def read_items(request: Request, repo=Depends(get_repo)):
-
-    return {"return": 'TODO'}
+    return get_items(repo)
 
 
 @router.get("/{uuid}", status_code=status.HTTP_200_OK, response_model=Item)

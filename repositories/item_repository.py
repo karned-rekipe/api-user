@@ -25,12 +25,10 @@ class ItemRepositoryMongo(ItemRepository):
     def __exit__( self, exc_type, exc_val, exc_tb ):
         self.client.close()
 
-    #Todo
-    # gerer l'erreur si insert_one ne fonctionne pas
-    # du coup inserted_id n'existe pa
     def create_item(self, item_create: Item) -> str:
         item_data = item_create.model_dump()
-        item_data["_id"] = str(uuid4())
+        item_data["_id"] = str(item_data['uuid'])
+        del(item_data['uuid'])
         new_item_id = self.db[self.collection].insert_one(item_data)
         return new_item_id.inserted_id
 
