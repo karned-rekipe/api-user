@@ -1,8 +1,6 @@
 from typing import List
 from uuid import uuid4
-
 from pymongo import MongoClient
-
 from interfaces.item_interface import ItemRepository
 from models.item_model import Item
 from schemas.item_schema import list_item_serial, item_serial
@@ -29,25 +27,33 @@ class ItemRepositoryMongo(ItemRepository):
         item_data = item_create.model_dump()
         item_data["_id"] = str(item_data['uuid'])
         del(item_data['uuid'])
-        new_item_id = self.db[self.collection].insert_one(item_data)
-        return new_item_id.inserted_id
+        new_uuid = self.db[self.collection].insert_one(item_data)
+        return new_uuid.inserted_id
 
-    def get_item(self, item_id: int) -> dict:
-        result = self.db[self.collection].find_one({"_id": item_id})
-        item = item_serial(result)
-        return item
+    def get_item(self, uuid: str) -> dict:
+        result = self.db[self.collection].find_one({"_id": uuid})
+        if result is None:
+            return None
+        else:
+            item = item_serial(result)
+            return item
 
-    def list_items(self) -> List[dict]:
-        result = self.db[self.collection].find()
+    def list_items(self, filters: dict) -> List[dict]:
+        query = {}
+
+        for key, value in filters.items():
+            query[key] = {'$regex': f"{value}", '$options': 'i'}
+
+        result = self.db[self.collection].find(query)
         items = list_item_serial(result)
         return items
 
-    def update_item(self, item_id: str, item_update: Item) -> None:
+    def update_item(self, uuid: str, item_update: Item) -> None:
         update_data = {"$set": item_update.model_dump()}
-        self.db[self.collection].find_one_and_update({"_id": item_id}, update_data)
+        self.db[self.collection].find_one_and_update({"_id": uuid}, update_data)
 
-    def delete_item(self, item_id: str) -> None:
-        self.db[self.collection].delete_one({"id": item_id})
+    def delete_item(self, uuid: str) -> None:
+        self.db[self.collection].delete_one({"_id": uuid})
 
     def close(self):
         self.client.close()

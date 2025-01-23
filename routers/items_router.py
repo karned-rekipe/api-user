@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException, status, Depends, Request
+from typing import Optional
+
+from fastapi import APIRouter, HTTPException, Query, status, Depends, Request
 from config.config import API_TAG_NAME, ITEM_REPO
 from decorators.check_permission import check_permissions
 from models.item_model import Item
@@ -18,21 +20,38 @@ router = APIRouter(
 async def create_new_item(request: Request, item: Item, repo=Depends(get_repo)) -> dict:
     print(item)
     item.created_by = request.state.token_info.get('user_id')
-    new_item_id = create_item(item, repo)
-    return {"uuid": new_item_id}
+    new_uuid = create_item(item, repo)
+    return {"uuid": new_uuid}
 
 
 @router.get("/", status_code=status.HTTP_200_OK, response_model=list[Item])
 @check_permissions(['read', 'read_own'])
-async def read_items(request: Request, repo=Depends(get_repo)):
-    return get_items(repo)
+async def read_items(
+    request: Request,
+    uuid: Optional[str] = Query(None, description="User : UUID"),
+    username: Optional[str] = Query(None, description="User : username"),
+    firstname: Optional[str] = Query(None, description="User : firstname"),
+    lastname: Optional[str] = Query(None, description="User : lastname"),
+    email: Optional[str] = Query(None, description="User : email"),
+    created_by: Optional[str] = Query(None, description="User who created this step"),
+    repo=Depends(get_repo)
+):
+    filters = {k: v for k, v in {
+        "uuid": uuid,
+        "username": username,
+        "firstname": firstname,
+        "lastname": lastname,
+        "email": email,
+        "created_by": created_by,
+    }.items() if v is not None}
+
+    return get_items(filters, repo)
 
 
 @router.get("/{uuid}", status_code=status.HTTP_200_OK, response_model=Item)
-@check_permissions(['list', 'list_own'])
-async def read_item(request: Request, item_id: str, repo=Depends(get_repo)):
-
-
+@check_permissions(['read', 'read_own'])
+async def read_item(request: Request, uuid: str, repo=Depends(get_repo)):
+    item = get_item(uuid, repo)
     if item is None:
         raise HTTPException(status_code=404, detail="Item not found")
     return item
@@ -40,9 +59,8 @@ async def read_item(request: Request, item_id: str, repo=Depends(get_repo)):
 
 @router.delete("/{uuid}", status_code=status.HTTP_204_NO_CONTENT)
 @check_permissions(['delete', 'delete_own'])
-async def delete_existing_item(request: Request, item_id: str, repo=Depends(get_repo)):
-    repo = request.state.repo
-    delete_item(item_id, repo)
+async def delete_existing_item(request: Request, uuid: str, repo=Depends(get_repo)):
+    delete_item(uuid, repo)
 
 @router.post("/{uuid}/reset-password", status_code=status.HTTP_201_CREATED)
 @check_permissions(['update'])

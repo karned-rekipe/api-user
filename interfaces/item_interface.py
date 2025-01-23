@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List
 from models.item_model import Item
 
+
 class ItemRepository(ABC):
 
     @abstractmethod
@@ -13,7 +14,7 @@ class ItemRepository(ABC):
         pass
 
     @abstractmethod
-    def list_items(self):
+    def list_items(self, filters: dict):
         pass
 
     @abstractmethod
