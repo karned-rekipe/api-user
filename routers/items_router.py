@@ -16,6 +16,7 @@ router = APIRouter(
 @router.post("/", status_code=status.HTTP_201_CREATED)
 @check_permissions(['create'])
 async def create_new_item(request: Request, item: Item, repo=Depends(get_repo)) -> dict:
+    print(item)
     item.created_by = request.state.token_info.get('user_id')
     new_item_id = create_item(item, repo)
     return {"uuid": new_item_id}
