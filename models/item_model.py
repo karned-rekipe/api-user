@@ -1,12 +1,12 @@
 from typing import Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, EmailStr
 
 class Item(BaseModel):
     uuid: str = Field(..., description="User : UUID")
     username: str = Field(..., description="User : username")
     firstname: Optional[str] = Field(None, description="User : firstname")
     lastname: Optional[str] = Field(None, description="User : lastname")
-    email: str = Field(..., description="User : email")
+    email: EmailStr = Field(..., description="User : email")
     created_by: Optional[str] = Field(None, description="User who created this step")
 
     @field_validator("lastname", mode="before")
